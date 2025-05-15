@@ -76,6 +76,10 @@ def getBotResponse(prompt: str):
     )
     return response
 
+@app.get("/")
+async def Home():
+    return {"message": "Its Live"}
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
     knowledgeBase = request.knowledge_base
