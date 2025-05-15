@@ -1,6 +1,6 @@
 import os
 from typing import AsyncGenerator, Optional
-from fastapi import Body, FastAPI, Request
+from fastapi import Body, FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 load_dotenv()
 
 # Initialize FastAPI
-app = FastAPI(title="SDPBot API", description="AI Chatbot for Smart Diet Planner")
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
