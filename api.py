@@ -153,7 +153,3 @@ async def delete_chunk(data: dict = Body(...)):
     vector_store = get_vector_store(knowledgeBase)
     vector_store.delete(ids= file_ids)
     return {"message": "Chunk deleted successfully"}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("api:app", host="localhost", port=8000, reload=True)
