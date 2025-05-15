@@ -39,13 +39,13 @@ class UserBody(BaseModel):
     goal: UserGoals
     foodType: list
     conditions: list
+    allergies: list
 
 class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     knowledge_base: str
     user_input: str
-    # user_data: UserBody | None
-    user_data: Optional[str] = None
+    user_data: Optional[UserBody] = None
     microNutrientFlag: Optional[str] = None
 
 def get_vector_store(document_id: str):
@@ -55,6 +55,32 @@ def get_vector_store(document_id: str):
         index_params={"index_type": "IVF_PQ", "metric_type": "COSINE"},
         embedding_function=embeddings,
     )
+
+def textualizeDocs(user_data: UserBody):
+    name = user_data.name
+    age = user_data.age
+    community = user_data.community
+    calorieGoal = user_data.goal.calories
+    carbsGoal = user_data.goal.carbs
+    fatGoal = user_data.goal.fat
+    proteinGoal = user_data.goal.protein
+    foodType = user_data.foodType
+    conditions = user_data.conditions
+    allergies = user_data.allergies
+    
+    output = f"""
+User Name: {name}
+Age: {age}
+State he belongs from: {', '.join(community)}
+Calories Goal: {calorieGoal}
+Carbs Goal: {carbsGoal}
+Fat Goal: {fatGoal}
+Protein Goal: {proteinGoal}
+Food Type Preference: {', '.join(foodType)}
+Disease / Conditions he suffers from: {', '.join(conditions)}
+Allergetic to: {', '.join(allergies)}
+"""
+    return output
 
 def promptWithUserData(query: str, context: str, data: str):
     return f"""
@@ -85,15 +111,18 @@ async def chat(request: ChatRequest):
     knowledgeBase = request.knowledge_base
     userQuery = request.user_input
     flag = request.microNutrientFlag
-    if flag and flag == True:
+    if flag and flag == "True":
         userData = request.user_data
+        textualData = textualizeDocs(user_data=userData)
+        print(textualData)
         vector_store = get_vector_store(knowledgeBase)
         filterPK = "micronutrients"
         retrieved_docs = vector_store.similarity_search(
             query=userQuery, k=1, filter={"chunk_category": filterPK}
         )
+        
         context = retrieved_docs[0].page_content.strip() or ""
-        prompt = promptWithUserData(query=userQuery, context=context, data=userData)
+        prompt = promptWithUserData(query=userQuery, context=context, data=textualData)
         response = getBotResponse(prompt)
         async def stream_response() -> AsyncGenerator[str, None]:
             try:
@@ -116,13 +145,13 @@ async def chat(request: ChatRequest):
 
     prompt = f"""
     You are a highly knowledgeable and empathetic nutritionist assistant.
-        Your role is to provide clear, evidence-based answers using below retrieved context from a trusted knowledge base.
-        Always keep responses concise (under 250 words), accurate, and user-friendly.
-        Never disclose your data source or say "Based on the document..., In the provided context..." etc.
-        Question: {userQuery}
-        Context: {context}
-        Do not any extra information from your own knowledge base.
-        If Context lacks relevant information to answer the question than deny the user politely explain No relevant Context was found for their question. Do not guess or answer from your own knowledge.
+    Your role is to provide clear, evidence-based answers using below retrieved context from a trusted knowledge base.
+    Always keep responses concise (under 250 words), accurate, and user-friendly.
+    Never disclose your data source or say "Based on the document..., In the provided context..." etc.
+    Question: {userQuery}
+    Context: {context}
+    Do not any extra information from your own knowledge base.
+    If Context lacks relevant information to answer the question than deny the user politely explain No relevant Context was found for their question. Do not guess or answer from your own knowledge.
     """
 
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
