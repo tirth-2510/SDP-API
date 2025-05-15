@@ -1,10 +1,9 @@
 import os
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 from fastapi import Body, FastAPI, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
 from dotenv import load_dotenv
 from groq import Groq
 from langchain_milvus import Zilliz
