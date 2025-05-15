@@ -114,7 +114,6 @@ async def chat(request: ChatRequest):
     if flag and flag == "True":
         userData = request.user_data
         textualData = textualizeDocs(user_data=userData)
-        print(textualData)
         vector_store = get_vector_store(knowledgeBase)
         filterPK = "micronutrients"
         retrieved_docs = vector_store.similarity_search(
